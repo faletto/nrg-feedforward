@@ -9,11 +9,14 @@ package frc.robot;
 import com.nrg948.preferences.RobotPreferencesLayout;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Timer;
+import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
+import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Constants.RobotConstants.OperatorConstants;
 import frc.robot.commands.DriveCommands;
+import frc.robot.commands.Feedforward;
 import frc.robot.subsystems.Subsystems;
 
 /**
@@ -38,6 +41,11 @@ public class RobotContainer {
 
   private Timer coastModeTimer = new Timer();
 
+
+  private double kS = 0.1;
+  private double kV = 0;
+  private double kA = 0;
+  private double targetVelocity = 5;
   /** The container for the robot. Contains subsystems, OI devices, and commands. */
   public RobotContainer() {
     // !! ADD TO LAB
@@ -97,11 +105,21 @@ public class RobotContainer {
   public void teleopInit() {
     subsystems.drivetrain.setBrakeMode(true);
     subsystems.drivetrain.disableAutoOrientation();
+    subsystems.drivetrain.setDefaultCommand(new Feedforward(subsystems.drivetrain, targetVelocity, kS, kV, kA));
   }
 
   public void periodic() {
     subsystems.periodic();
   }
 
-  public void initShuffleboard() {}
+  public void initShuffleboard() {
+  ShuffleboardTab tab = Shuffleboard.getTab("Tuning");
+  tab.add("kS", kS).withWidget("Number Slider");
+  tab.add("kV", kV).withWidget("Number Slider");
+  tab.add("kA", kA).withWidget("Number Slider");
+  ShuffleboardTab dataTab = Shuffleboard.getTab("Live Data");
+  dataTab.addNumber("Target Velocity", () -> targetVelocity);
+  dataTab.addNumber("Actual Velocity", () -> subsystems.drivetrain.getChassisSpeeds().vxMetersPerSecond);
+  
+  }
 }
